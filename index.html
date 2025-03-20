@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFT Transaction Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.10.0/dist/web3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #6c5ce7;
+            --secondary-color: #a29bfe;
+            --dark-color: #2d3436;
+            --light-color: #f9f9f9;
+            --success-color: #00b894;
+            --warning-color: #fdcb6e;
+            --danger-color: #d63031;
+            --info-color: #0984e3;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            background-image: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(162, 155, 254, 0.1) 100%);
+            color: var(--dark-color);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: #636e72;
+            font-size: 1.1rem;
+        }
+
+        .network-selector {
+            background-color: var(--light-color);
+            border-radius: 10px;
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .network-option {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .network-option.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        .form-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .full-width {
+            grid-column: span 2;
+        }
+
+        .form-group {
+            margin-bottom: 5px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2d3436;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dfe6e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            color: #2d3436;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button i {
+            font-size: 1.2rem;
+        }
+
+        .btn-simulate {
+            background-color: var(--info-color);
+            color: white;
+        }
+
+        .btn-simulate:hover {
+            background-color: #0769b0;
+            box-shadow: 0 5px 15px rgba(9, 132, 227, 0.3);
+        }
+
+        .btn-execute {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-execute:hover {
+            background-color: #5649c0;
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        .btn-timed-mint {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-timed-mint:hover {
+            background-color: #00a382;
+            box-shadow: 0 5px 15px rgba(0, 184, 148, 0.3);
+        }
+
+        .btn-stop {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-stop:hover {
+            background-color: #b52a2a;
+            box-shadow: 0 5px 15px rgba(214, 48, 49, 0.3);
+        }
+
+        .notice {
+            background-color: #fff8dc;
+            border-left: 4px solid #fdcb6e;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .advanced-options {
+            background-color: var(--light-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #eee;
+            transition: all 0.3s ease;
+        }
+
+        .advanced-options.active {
+            border-color: var(--secondary-color);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .toggle {
+            position: relative;
+            display: inline-block;
+            width: 54px;
+            height: 28px;
+            margin-right: 10px;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .toggle-label {
+            font-weight: 600;
+        }
+
+        .console-container {
+            margin-top: 30px;
+        }
+
+        .console-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .console-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .console-actions button {
+            background: none;
+            border: none;
+            color: #636e72;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 14px;
+        }
+
+        .console {
+            background-color: #2d3436;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 10px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .console p {
+            margin: 5px 0;
+            word-break: break-all;
+        }
+
+        .console p.yellow { color: #fdcb6e; }
+        .console p.cyan { color: #00cec9; }
+        .console p.green { color: #00b894; }
+        .console p.red { color: #ff7675; }
+        .console p.blue { color: #74b9ff; }
+        .console p.purple { color: #a29bfe; }
+
+        .info-icon {
+            color: var(--info-color);
+            margin-left: 5px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tooltip {
+            position: absolute;
+            top: -5px;
+            left: 125%;
+            visibility: hidden;
+            width: 250px;
+            background-color: #2d3436;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        .info-icon:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        .mint-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border: 1px solid #eee;
+        }
+
+        .mint-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2d3436;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .clock-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .clock-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .clock-digit {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            width: 50px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .clock-label {
+            margin-top: 5px;
+            font-size: 12px;
+            color: #636e72;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+
+            .form-container {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: span 1;
+            }
+
+            .button-container {
+                flex-direction: column;
+            }
+
+            .clock-container {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>NFT Transaction Interface</h1>
+            <p class="subtitle">Mint NFTs with custom transaction parameters</p>
+        </header>
+
+        <div class="network-selector">
+            <div class="network-option active" data-network="mainnet">
+                <i class="fas fa-globe"></i> Ethereum Mainnet
+            </div>
+            <div class="network-option" data-network="sepolia">
+                <i class="fas fa-flask"></i> Sepolia Testnet
+            </div>
+        </div>
+
+        <div class="form-container">
+            <div class="form-group">
+                <label for="privateKey">
+                    Private Key 
+                    <span class="info-icon">
+                        <i class="fas fa-info-circle"></i>
+                        <span class="tooltip">Your private key is processed locally and never sent to any server</span>
+                    </span>
+                </label>
+                <input type="password" id="privateKey" placeholder="Enter your private key" />
+            </div>
+
+            <div class="form-group">
+                <label for="contractAddress">NFT Contract Address</label>
+                <input type="text" id="contractAddress" placeholder="0x..." />
+            </div>
+
+            <div class="form-group">
+                <label for="dataHex">Data HEX Value</label>
+                <input type="text" id="dataHex" placeholder="0x..." />
+            </div>
+
+            <div class="form-group">
+                <label for="value">Value to Send (ETH)</label>
+                <input type="number" id="value" placeholder="0.1" step="0.01" />
+            </div>
+
+            <div class="advanced-options full-width">
+                <div class="toggle-container">
+                    <label class="toggle">
+                        <input type="checkbox" id="advancedOptions">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label">Advanced Gas Options</span>
+                </div>
+
+                <div id="gasOptions" style="display: none;">
+                    <div class="form-container" style="margin-top: 15px;">
+                        <div class="form-group">
+                            <label for="maxPriorityFee">Max Priority Fee (GWEI)</label>
+                            <input type="number" id="maxPriorityFee" placeholder="2"/>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="extraGas">Extra Gas Fee (GWEI)</label>
+                            <input type="number" id="extraGas" placeholder="0"/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-container full-width">
+                <button id="simulateBtn" class="btn-simulate">
+                    <i class="fas fa-vial"></i> Simulate Transaction
+                </button>
+                <button id="executeBtn" class="btn-execute" disabled>
+                    <i class="fas fa-rocket"></i> Execute Transaction
+                </button>
+            </div>
+        </div>
+
+        <div class="mint-section">
+            <div class="mint-title">
+                <i class="fas fa-clock"></i> Timed Mint with Auto-Retry
+            </div>
+
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="mintDateTime">Mint Date and Time</label>
+                    <input type="datetime-local" id="mintDateTime" />
+                </div>
+
+                <div class="form-group">
+                    <label for="retryDelay">Retry Delay (ms)</label>
+                    <input type="number" id="retryDelay" value="500" min="100" max="5000" />
+                </div>
+            </div>
+
+            <div id="countdown" style="display: none;">
+                <div class="clock-container">
+                    <div class="clock-item">
+                        <div class="clock-digit" id="days">00</div>
+                        <div class="clock-label">Days</div>
+                    </div>
+                    <div class="clock-item">
+                        <div class="clock-digit" id="hours">00</div>
+                        <div class="clock-label">Hours</div>
+                    </div>
+                    <div class="clock-item">
+                        <div class="clock-digit" id="minutes">00</div>
+                        <div class="clock-label">Minutes</div>
+                    </div>
+                    <div class="clock-item">
+                        <div class="clock-digit" id="seconds">00</div>
+                        <div class="clock-label">Seconds</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="button-container">
+                <button id="startTimedMint" class="btn-timed-mint">
+                    <i class="fas fa-clock"></i> Start Timed Mint
+                </button>
+                <button id="stopTimedMint" class="btn-stop" disabled>
+                    <i class="fas fa-stop"></i> Stop
+                </button>
+            </div>
+        </div>
+
+        <div class="notice">
+            <p><strong>Security Notice:</strong> Your private key is processed locally in your browser and is never sent to any server. Always verify contract addresses before submitting transactions.</p>
+        </div>
+
+        <div class="console-container">
+            <div class="console-header">
+                <div class="console-title">
+                    <i class="fas fa-terminal"></i> Console Output
+                </div>
+                <div class="console-actions">
+                    <button id="clearConsole"><i class="fas fa-trash"></i> Clear</button>
+                </div>
+            </div>
+            <div class="console" id="console"></div>
+        </div>
+    </div>
+
+    <script>
+    const networkOptions = document.querySelectorAll('.network-option');
+    const privateKeyInput = document.getElementById('privateKey');
+    const contractAddressInput = document.getElementById('contractAddress');
+    const dataHexInput = document.getElementById('dataHex');
+    const valueInput = document.getElementById('value');
+    const advancedOptionsCheckbox = document.getElementById('advancedOptions');
+    const gasOptionsDiv = document.getElementById('gasOptions');
+    const maxPriorityFeeInput = document.getElementById('maxPriorityFee');
+    const extraGasInput = document.getElementById('extraGas');
+    const simulateBtn = document.getElementById('simulateBtn');
+    const executeBtn = document.getElementById('executeBtn');
+    const mintDateTimeInput = document.getElementById('mintDateTime');
+    const retryDelayInput = document.getElementById('retryDelay');
+    const startTimedMintBtn = document.getElementById('startTimedMint');
+    const stopTimedMintBtn = document.getElementById('stopTimedMint');
+    const countdownDiv = document.getElementById('countdown');
+    const daysSpan = document.getElementById('days');
+    const hoursSpan = document.getElementById('hours');
+    const minutesSpan = document.getElementById('minutes');
+    const secondsSpan = document.getElementById('seconds');
+    const consoleDiv = document.getElementById('console');
+    const clearConsoleBtn = document.getElementById('clearConsole');
+    
+    let currentNetwork = 'mainnet';
+    let simulationSuccessful = false;
+    let txParams = null;
+    let timedMintActive = false;
+    let countdownInterval = null;
+    let mintTimeout = null;
+    let transactionSent = false;
+    let pendingTransaction = null;
+    let errorMessages = new Set();
+    
+    const updateDefaultMintTime = () => {
+        const now = new Date();
+        const timezoneOffset = now.getTimezoneOffset() * 60000;
+        const localISOTime = new Date(now.getTime() - timezoneOffset).toISOString().slice(0, 16);
+        mintDateTimeInput.value = localISOTime;
+    };
+    
+    updateDefaultMintTime();
+    
+    networkOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            networkOptions.forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            currentNetwork = this.dataset.network;
+            simulationSuccessful = false;
+            executeBtn.disabled = true;
+            logWithColor('yellow', '🔄', `Switched to ${currentNetwork}`);
+        });
+    });
+    
+    advancedOptionsCheckbox.addEventListener('change', function() {
+        gasOptionsDiv.style.display = this.checked ? 'block' : 'none';
+        document.querySelector('.advanced-options').classList.toggle('active', this.checked);
+        if (this.checked) {
+            if (!maxPriorityFeeInput.value) maxPriorityFeeInput.value = '2';
+            if (!extraGasInput.value) extraGasInput.value = '0';
+        } else {
+            maxPriorityFeeInput.value = '';
+            extraGasInput.value = '';
+        }
+    });
+    
+    clearConsoleBtn.addEventListener('click', function() {
+        consoleDiv.innerHTML = '';
+        errorMessages.clear();
+    });
+    
+    const logToConsole = (message, color = '') => {
+        const p = document.createElement('p');
+        if (color) p.className = color;
+        p.innerHTML = message;
+        consoleDiv.appendChild(p);
+        consoleDiv.scrollTop = consoleDiv.scrollHeight;
+    };
+    
+    const logWithColor = (color, emoji, message) => {
+        logToConsole(`${emoji} ${message}`, color);
+    };
+    
+    const logError = (message) => {
+        if (!errorMessages.has(message)) {
+            logWithColor('red', '❌', message);
+            errorMessages.add(message);
+            setTimeout(() => {
+                errorMessages.delete(message);
+            }, 5000);
+        }
+    };
+    
+    const validateInputs = () => {
+        let isValid = true;
+        errorMessages.clear();
+        
+        if (!privateKeyInput.value) {
+            logError('Please enter your private key');
+            isValid = false;
+        }
+        
+        if (!contractAddressInput.value || !contractAddressInput.value.startsWith('0x')) {
+            logError('Please enter a valid contract address');
+            isValid = false;
+        }
+        
+        if (!dataHexInput.value || !dataHexInput.value.startsWith('0x')) {
+            logError('Please enter valid HEX data');
+            isValid = false;
+        }
+        
+        if (valueInput.value === '' || (parseFloat(valueInput.value) < 0)) {
+            logError('Please enter a valid ETH value (0 or positive number)');
+            isValid = false;
+        }
+        
+        return isValid;
+    };
+    
+    const getRpcUrl = () => {
+        return currentNetwork === 'mainnet' ? 'https://eth.llamarpc.com' : 'https://sepolia.drpc.org';
+    };
+    
+    const formatTimeValue = (value) => {
+        return value < 10 ? `0${value}` : value;
+    };
+    
+    const updateCountdown = () => {
+        const now = Date.now();
+        const mintTime = new Date(mintDateTimeInput.value).getTime();
+        const timeLeft = mintTime - now;
+        
+        if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+            daysSpan.textContent = '00';
+            hoursSpan.textContent = '00';
+            minutesSpan.textContent = '00';
+            secondsSpan.textContent = '00';
+            countdownDiv.style.display = 'none';
+            if (timedMintActive) startMintProcess();
+            return;
+        }
+        
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+        
+        daysSpan.textContent = formatTimeValue(days);
+        hoursSpan.textContent = formatTimeValue(hours);
+        minutesSpan.textContent = formatTimeValue(minutes);
+        secondsSpan.textContent = formatTimeValue(seconds);
+    };
+    
+    const simulateTransaction = async (isTimed = false) => {
+        if (!validateInputs()) throw new Error('Invalid inputs');
+        
+        const web3 = new Web3(getRpcUrl());
+        const account = web3.eth.accounts.privateKeyToAccount(privateKeyInput.value);
+        web3.eth.accounts.wallet.add(account);
+        
+        const valueWei = web3.utils.toWei(valueInput.value || '0', 'ether');
+        const latestBlock = await web3.eth.getBlock('latest');
+        const baseFeePerGas = latestBlock.baseFeePerGas.toString();
+        
+        let maxPriorityFeePerGas, extraGasWei;
+        if (advancedOptionsCheckbox.checked) {
+            const maxPriorityFee = maxPriorityFeeInput.value || '2';
+            const extraGas = extraGasInput.value || '0';
+            maxPriorityFeePerGas = web3.utils.toWei(maxPriorityFee, 'gwei');
+            extraGasWei = web3.utils.toWei(extraGas, 'gwei');
+        } else {
+            maxPriorityFeePerGas = web3.utils.toWei('2', 'gwei');
+            extraGasWei = '0';
+        }
+        
+        const baseFeePerGasBN = web3.utils.toBN(baseFeePerGas);
+        const maxPriorityFeePerGasBN = web3.utils.toBN(maxPriorityFeePerGas);
+        const extraGasBN = web3.utils.toBN(extraGasWei);
+        const maxFeePerGasBN = baseFeePerGasBN.add(maxPriorityFeePerGasBN).add(extraGasBN);
+        const maxFeePerGas = maxFeePerGasBN.toString();
+        
+        if (!isTimed) {
+            logWithColor('cyan', '📊', 'Gas info:');
+            logToConsole(`  Base fee per gas: ${web3.utils.fromWei(baseFeePerGas, 'gwei')} GWEI`);
+            logToConsole(`  Max priority fee per gas: ${web3.utils.fromWei(maxPriorityFeePerGas, 'gwei')} GWEI`);
+            logToConsole(`  Extra gas fee: ${web3.utils.fromWei(extraGasWei, 'gwei')} GWEI`);
+            logToConsole(`  Max fee per gas: ${web3.utils.fromWei(maxFeePerGas, 'gwei')} GWEI`);
+        }
+        
+        const txForEstimate = {
+            from: account.address,
+            to: contractAddressInput.value,
+            value: valueWei,
+            data: dataHexInput.value,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+        };
+        
+        const estimatedGas = await web3.eth.estimateGas(txForEstimate);
+        const nonce = await web3.eth.getTransactionCount(account.address, 'pending');
+        
+        const txParams = {
+            from: account.address,
+            to: contractAddressInput.value,
+            value: valueWei,
+            data: dataHexInput.value,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+            gas: estimatedGas.toString(),
+            nonce,
+        };
+        
+        if (!isTimed) {
+            logWithColor('green', '✅', `Simulation successful. Estimated gas: ${estimatedGas}`);
+        }
+        
+        return txParams;
+    };
+    
+    const executeTransaction = async (txParams) => {
+        if (transactionSent || pendingTransaction) {
+            return false;
+        }
+        
+        const web3 = new Web3(getRpcUrl());
+        const account = web3.eth.accounts.privateKeyToAccount(privateKeyInput.value);
+        web3.eth.accounts.wallet.add(account);
+        
+        try {
+            pendingTransaction = true;
+            const transactionPromise = new Promise((resolve, reject) => {
+                const sendTx = web3.eth.sendTransaction(txParams);
+                
+                sendTx.on('transactionHash', hash => {
+                    logWithColor('blue', '🔗', `Transaction hash: ${hash}`);
+                    transactionSent = true;
+                    
+                    if (timedMintActive) {
+                        logWithColor('green', '✅', 'Transaction sent successfully. Stopping timed mint.');
+                        stopTimedMint();
+                    }
+                });
+                
+                sendTx.on('receipt', receipt => {
+                    logWithColor('green', '🎉', 'Transaction confirmed!');
+                    logToConsole(`Block number: ${receipt.blockNumber}`);
+                    logToConsole(`Gas used: ${receipt.gasUsed}`);
+                    resolve(true);
+                });
+                
+                sendTx.on('error', error => {
+                    logWithColor('red', '❌', `Transaction failed: ${error.message}`);
+                    transactionSent = false;
+                    reject(error);
+                });
+            });
+            
+            await transactionPromise;
+            return true;
+        } catch (error) {
+            return false;
+        } finally {
+            pendingTransaction = false;
+        }
+    };
+    
+    simulateBtn.addEventListener('click', async () => {
+        const originalContent = simulateBtn.innerHTML;
+        simulateBtn.innerHTML = '<div class="loading"></div> Simulating...';
+        simulateBtn.disabled = true;
+        executeBtn.disabled = true;
+        simulationSuccessful = false;
+        
+        try {
+            txParams = await simulateTransaction(false);
+            simulationSuccessful = true;
+            executeBtn.disabled = false;
+        } catch (error) {
+            logWithColor('red', '❌', `Simulation failed: ${error.message}`);
+        } finally {
+            simulateBtn.innerHTML = originalContent;
+            simulateBtn.disabled = false;
+        }
+    });
+    
+    executeBtn.addEventListener('click', async () => {
+        if (!simulationSuccessful || !txParams) {
+            logWithColor('red', '❌', 'Please simulate the transaction first');
+            return;
+        }
+        
+        const originalContent = executeBtn.innerHTML;
+        executeBtn.innerHTML = '<div class="loading"></div> Executing...';
+        executeBtn.disabled = true;
+        
+        try {
+            await executeTransaction(txParams);
+            logWithColor('green', '🚀', 'Transaction sent.');
+        } catch (error) {
+            logWithColor('red', '❌', `Transaction failed: ${error.message}`);
+        } finally {
+            executeBtn.innerHTML = originalContent;
+            executeBtn.disabled = false;
+        }
+    });
+    
+    const startMintProcess = async () => {
+        if (!validateInputs()) {
+            logWithColor('red', '❌', 'Cannot start timed mint - please check your inputs');
+            stopTimedMint();
+            return;
+        }
+        
+        logWithColor('green', '⏰', 'Mint time reached. Starting minting process...');
+        countdownDiv.style.display = 'none';
+        transactionSent = false;
+        
+        try {
+            const attemptMint = async () => {
+                if (!timedMintActive || transactionSent) {
+                    return;
+                }
+                
+                try {
+                    const txParams = await simulateTransaction(true);
+                    const success = await executeTransaction(txParams);
+                    if (!success && timedMintActive && !transactionSent) {
+                        setTimeout(attemptMint, Math.max(100, parseInt(retryDelayInput.value)));
+                    }
+                } catch (error) {
+                    logWithColor('red', '❌', `Mint attempt failed: ${error.message}`);
+                    if (timedMintActive && !transactionSent) {
+                        setTimeout(attemptMint, Math.max(100, parseInt(retryDelayInput.value)));
+                    }
+                }
+            };
+            await attemptMint();
+        } catch (error) {
+            logWithColor('red', '❌', `Minting process error: ${error.message}`);
+            if (!transactionSent) {
+                stopTimedMint();
+            }
+        }
+    };
+    
+    const stopTimedMint = () => {
+        timedMintActive = false;
+        if (countdownInterval) clearInterval(countdownInterval);
+        if (mintTimeout) clearTimeout(mintTimeout);
+        countdownDiv.style.display = 'none';
+        startTimedMintBtn.disabled = false;
+        stopTimedMintBtn.disabled = true;
+        logWithColor('yellow', '🛑', 'Timed mint stopped');
+    };
+    
+    startTimedMintBtn.addEventListener('click', () => {
+        if (timedMintActive) {
+            logWithColor('red', '❌', 'Timed mint is already active');
+            return;
+        }
+        
+        if (!validateInputs()) {
+            logWithColor('red', '❌', 'Cannot start timed mint - please check your inputs');
+            return;
+        }
+        
+        const mintTime = new Date(mintDateTimeInput.value).getTime();
+        if (isNaN(mintTime)) {
+            logWithColor('red', '❌', 'Please select a valid mint date and time');
+            return;
+        }
+        
+        timedMintActive = true;
+        transactionSent = false;
+        pendingTransaction = false;
+        startTimedMintBtn.disabled = true;
+        stopTimedMintBtn.disabled = false;
+        
+        const now = Date.now();
+        const delay = mintTime - now;
+        updateCountdown();
+        countdownInterval = setInterval(updateCountdown, 1000);
+        countdownDiv.style.display = 'block';
+        
+        if (delay <= 0) {
+            startMintProcess();
+        } else {
+            mintTimeout = setTimeout(startMintProcess, delay);
+        }
+    });
+    
+    stopTimedMintBtn.addEventListener('click', stopTimedMint);
+    window.addEventListener('load', updateDefaultMintTime);
+    </script>
+</body>
+</html>
